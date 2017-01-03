@@ -34,7 +34,7 @@ INCLUDE_DIRECTORIES(${CHOLMOD_INCLUDE_DIR}
 
 ADD_EXECUTABLE( data_reading
                 src/data_reading.cpp
-                ${thirdparty_sources})
+                ${thirdparty_sources} include/filereader.h src/filereader.cpp)
 
 TARGET_LINK_LIBRARIES(  data_reading
                         ${OpenCV_LIBS}
