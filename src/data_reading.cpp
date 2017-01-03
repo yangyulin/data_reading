@@ -1,9 +1,12 @@
 
 #include<iostream>
+#include "filereader.h"
 
 using namespace std;
 
 int main(){
 
-return 0;
+    FR::filereader fr("/home/linde/data/Project/data_reading/simdata");
+
+    return 0;
 }
