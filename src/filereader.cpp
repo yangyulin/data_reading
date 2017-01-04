@@ -62,7 +62,7 @@ FR::filereader::filereader(std::string datadir) {
 
     //check whether map files are there
     if( !FR::Files::is_file_exist(path_map_feat)){
-        std::cerr << "[filereader]: Cannot find the Cam files!" << std::endl;
+        std::cerr << "[filereader]: Cannot find the map files!" << std::endl;
         std::cerr << "[filereader]: Tried to find it at: " << path_map_feat << std::endl;
     }
 
@@ -105,8 +105,142 @@ FR::filereader::filereader(std::string datadir) {
         imu_times.push_back(timestamp);
     }
 
-    //read in the
+    //read in the Am
+    tempStr.clear();
+    while(!file_Am.eof()){
+        getline(file_Am, tempStr);
+        sscanf(tempStr.c_str(), "%lf, %lf, %lf", &a1, &a2, &a3);
+        Am.push_back(Eigen::Vector3d(a1,a2,a3));
+    }
+    //read in the Ar
+    tempStr.clear();
+    while(!file_Ar.eof()){
+        getline(file_Ar, tempStr);
+        sscanf(tempStr.c_str(), "%lf, %lf, %lf", &a1, &a2, &a3);
+        Ar.push_back(Eigen::Vector3d(a1,a2,a3));
+    }
+    //read in the Om
+    tempStr.clear();
+    while(!file_Om.eof()){
+        getline(file_Om, tempStr);
+        sscanf(tempStr.c_str(), "%lf, %lf, %lf", &w1, &w2, &w3);
+        Om.push_back(Eigen::Vector3d(w1,w2,w3));
+    }
+    //read in the Or
+    tempStr.clear();
+    while(!file_Or.eof()){
+        getline(file_Or, tempStr);
+        sscanf(tempStr.c_str(), "%lf, %lf, %lf", &w1, &w2, &w3);
+        Or.push_back(Eigen::Vector3d(w1,w2,w3));
+    }
+    //read in the xtk_log
+    tempStr.clear();
+    Eigen::Matrix<double,22,1> tempImuState;
+    while(!file_xtk_log.eof()){
+        getline(file_xtk_log, tempStr);
+        sscanf(tempStr.c_str(), "%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf",
+                                &q1,&q2,&q3,&q4,&bg1,&bg2,&bg3,&v1,&v2,&v3,&ba1,&ba2,&ba3,&p1,&p2,&p3,&x1,&x2,&x3,&x4,&x5,&x6);
+        tempImuState <<q1,q2,q3,q4,bg1,bg2,bg3,v1,v2,v3,ba1,ba2,ba3,p1,p2,p3,x1,x2,x3,x4,x5,x6;
+        xtk_log.push_back(tempImuState);
+    }
 
+    ///read in the map information
+    tempStr.clear();
+    while(!file_map_feat.eof()){
+        getline(file_map_feat, tempStr);
+        sscanf(tempStr.c_str(), "%lf, %lf, %lf", &p1, &p2, &p3);
+        map_feat.push_back(Eigen::Vector3d(p1,p2,p3));
+    }
+
+    ///read in the cam data
+    std::vector<double> id;
+    std::vector<double> val_u;
+    std::vector<double> val_v;
+    double temp;
+    //read in the cam timestamp
+    tempStr.clear();
+    while(!file_ImgTS.eof()){
+        getline(file_ImgTS, tempStr);
+        sscanf(tempStr.c_str(), "%lf", &timestamp);
+        ImgTS.push_back(timestamp);
+    }
+
+    //read in the measured camera data
+    tempStr.clear();
+    while(!file_ImgPtsUm.eof() || !file_ImgPtsVm.eof() || !file_ImgId.eof()){
+
+        id.clear();
+        val_u.clear();
+        val_v.clear();
+        //read id
+        getline(file_ImgId,tempStr);
+        std::stringstream sid(tempStr);
+        while(sid >> temp){
+            id.push_back(temp-1);
+            if( sid.peek() == ','){
+                sid.ignore();
+            }
+        }
+        ImgId.push_back(id);
+
+        //read val_u
+        tempStr.clear();
+        getline(file_ImgPtsUm,tempStr);
+        std::stringstream sval_u(tempStr);
+        while(sval_u >> temp){
+            val_u.push_back(temp);
+            if(sval_u.peek() == ','){
+                sval_u.ignore();
+            }
+        }
+        ImgPtsUm.push_back(val_u);
+
+        //read val_v
+        tempStr.clear();
+        getline(file_ImgPtsVm,tempStr);
+        std::stringstream sval_v(tempStr);
+        while(sval_v >> temp){
+            val_v.push_back(temp);
+            if(sval_v.peek() == ','){
+                sval_v.ignore();
+            }
+        }
+        ImgPtsVm.push_back(val_v);
+
+    }
+
+    //read in the true cam data
+    tempStr.clear();
+    while(!file_ImgPtsU.eof() || !file_ImgPtsV.eof()){
+
+        val_u.clear();
+        val_v.clear();
+
+        //read val_u
+        tempStr.clear();
+        getline(file_ImgPtsU,tempStr);
+        std::stringstream sval_u(tempStr);
+        while(sval_u >> temp){
+            val_u.push_back(temp);
+            if(sval_u.peek() == ','){
+                sval_u.ignore();
+            }
+        }
+        ImgPtsU.push_back(val_u);
+
+        //read val_v
+        tempStr.clear();
+        getline(file_ImgPtsV,tempStr);
+        std::stringstream sval_v(tempStr);
+        while(sval_v >> temp){
+            val_v.push_back(temp);
+            if(sval_v.peek() == ','){
+                sval_v.ignore();
+            }
+        }
+        ImgPtsV.push_back(val_v);
+
+    }
 }
 
 std::vector<double, std::allocator<double>> FR::filereader::getimu_times() {
